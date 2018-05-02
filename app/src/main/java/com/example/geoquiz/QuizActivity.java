@@ -1,5 +1,8 @@
 package com.example.geoquiz;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,12 +16,16 @@ public class QuizActivity extends AppCompatActivity {
 
     private static final String TAG = "QuizActivity";
     public static final String KEY_INDEX = "index";
+    private static final int REQUEST_CODE_CHEAT = 0;
+    private static final String EXTRA_ANSWER_SHOWN = "com.example.geoquiz.answer_shown";
 
     private Button mTrueButton;
     private Button mFalseButton;
     private ImageButton mNextButton;
     private TextView mQuestionTextView;
     private ImageButton mPreviousButton;
+    private Button mCheatButton;
+    private boolean mIsCheater;
 
     private Question[] mQuestionBank = new Question[] {
             new Question(R.string.question_oceans, true),
@@ -36,8 +43,12 @@ public class QuizActivity extends AppCompatActivity {
 
     private void checkAnswer(boolean userPressedTrue) {
         boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
-        int messageResId = 0;
-        if (userPressedTrue == answerIsTrue) {
+        int messageResId;
+
+        if(mIsCheater){
+            messageResId = R.string.judgment_toast;
+        }
+        else if (userPressedTrue == answerIsTrue) {
             messageResId = R.string.correct_toast;
         } else {
             messageResId = R.string.incorrect_toast;
@@ -52,7 +63,7 @@ public class QuizActivity extends AppCompatActivity {
         Log.d(TAG, "onCreate(Bundle) called.");
         setContentView(R.layout.activity_quiz);
 
-        mQuestionTextView = (TextView) findViewById(R.id.question_test_view);
+        mQuestionTextView = findViewById(R.id.question_test_view);
         mQuestionTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -61,14 +72,14 @@ public class QuizActivity extends AppCompatActivity {
             }
         });
 
-        mTrueButton = (Button) findViewById(R.id.true_button);
+        mTrueButton = findViewById(R.id.true_button);
         mTrueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 checkAnswer(true);
             }
         });
-        mFalseButton = (Button) findViewById(R.id.false_button);
+        mFalseButton = findViewById(R.id.false_button);
         mFalseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -81,6 +92,7 @@ public class QuizActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mCurrentIndex = (mCurrentIndex + 1) % mQuestionBank.length;
+                mIsCheater = false;
                 updateQuestion();
             }
         });
@@ -98,9 +110,38 @@ public class QuizActivity extends AppCompatActivity {
             }
         });
 
+        mCheatButton = findViewById(R.id.cheat_button);
+        mCheatButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
+                Intent i = CheatActivity.newIntent(QuizActivity.this, answerIsTrue);
+                startActivityForResult(i, REQUEST_CODE_CHEAT);
+
+            }
+        });
+
+        if (savedInstanceState != null) {
+            mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0);
+        }
+
         updateQuestion();
 
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+        if (requestCode == REQUEST_CODE_CHEAT) {
+            if (data == null) {
+                return;
+            }
+            mIsCheater = CheatActivity.wasAnswerShown(data);
+        }
+    }
+
 
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
@@ -134,4 +175,6 @@ public class QuizActivity extends AppCompatActivity {
         super.onDestroy();
         Log.d(TAG, "onDestroy() called");
     }
+
+
 }
