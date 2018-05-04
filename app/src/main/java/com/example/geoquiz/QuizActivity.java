@@ -17,7 +17,6 @@ public class QuizActivity extends AppCompatActivity {
     private static final String TAG = "QuizActivity";
     public static final String KEY_INDEX = "index";
     private static final int REQUEST_CODE_CHEAT = 0;
-    private static final String EXTRA_ANSWER_SHOWN = "com.example.geoquiz.answer_shown";
 
     private Button mTrueButton;
     private Button mFalseButton;
@@ -63,7 +62,7 @@ public class QuizActivity extends AppCompatActivity {
         Log.d(TAG, "onCreate(Bundle) called.");
         setContentView(R.layout.activity_quiz);
 
-        mQuestionTextView = findViewById(R.id.question_test_view);
+        mQuestionTextView = findViewById(R.id.question_text_view);
         mQuestionTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
